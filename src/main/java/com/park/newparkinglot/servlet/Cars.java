@@ -8,9 +8,13 @@ import com.newparkinglot.ejb.CarBean;
 import com.park.newparkinglot.common.CarDetails;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.security.DeclareRoles;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.HttpConstraint;
+import javax.servlet.annotation.ServletSecurity;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +24,12 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author radvo
  */
+@DeclareRoles({"AdminRole", "ClientRole"})
+@ServletSecurity(
+        value = @HttpConstraint(
+                rolesAllowed = {"AdminRole"}
+        )
+)
 @WebServlet(name = "Cars", urlPatterns = {"/Cars"})
 public class Cars extends HttpServlet {
 
@@ -85,7 +95,15 @@ public class Cars extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        //processRequest(request, response);
+        String[] carIdsAsString = request.getParameterValues("car_ids");
+        if (carIdsAsString != null) {
+            List<Integer> carIds = new ArrayList<>();
+            for (String carIdAsString : carIdsAsString) {
+                carIds.add(Integer.parseInt(carIdAsString));
+            }
+            carBean.deleteCarsByIds(carIds);
+        }
     }
 
     /**

@@ -4,7 +4,9 @@
  */
 package com.park.newparkinglot.servlet;
 
+import com.newparkinglot.ejb.CarBean;
 import com.newparkinglot.ejb.UserBean;
+import com.park.newparkinglot.common.CarDetails;
 import com.park.newparkinglot.common.UserDetails;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,8 +22,14 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author radvo
  */
-@WebServlet(name = "Users", urlPatterns = {"/Users"})
-public class Users extends HttpServlet {
+@WebServlet(name = "EditCar", urlPatterns = {"/EditCar"})
+public class EditCar extends HttpServlet {
+
+    @Inject
+    UserBean userBean;
+
+    @Inject
+    CarBean carBean;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -32,9 +40,6 @@ public class Users extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-    @Inject
-    private UserBean userBean;
-    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -43,10 +48,10 @@ public class Users extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet Users</title>");            
+            out.println("<title>Servlet EditCar</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet Users at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet EditCar at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -65,12 +70,15 @@ public class Users extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         //processRequest(request, response);
-        request.setAttribute("activePage", "Users");
-        
+
         List<UserDetails> users = userBean.getAllUsers();
         request.setAttribute("users", users);
 
-        request.getRequestDispatcher("/WEB-INF/pages/users.jsp").forward(request, response);
+        int carId = Integer.parseInt(request.getParameter("id"));
+        CarDetails car = carBean.findById(carId);
+        request.setAttribute("car", car);
+
+        request.getRequestDispatcher("/WEB-INF/pages/editCar.jsp").forward(request, response);
     }
 
     /**
@@ -84,8 +92,16 @@ public class Users extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        //processRequest(request, response);
         
+        String licensePlate = request.getParameter("license_plate");
+        String parkingSpot = request.getParameter("parking_spot");
+        int ownerId = Integer.parseInt(request.getParameter("owner_id"));
+        int carId = Integer.parseInt(request.getParameter("car_id"));
+        
+        carBean.updateCar(carId,licensePlate, parkingSpot, ownerId);
+        
+        response.sendRedirect(request.getContextPath()+"/Cars");
     }
 
     /**
